@@ -8,9 +8,20 @@ public class DoubleTap : MonoBehaviour {
     int TapCount;
     public float MaxDubbleTapTime;
     float NewTime;
+    public AudioSource iniciar;
  
     void Start () {
         TapCount = 0;
+        StartCoroutine(LembrarComoAbreTela());
+    }
+
+    IEnumerator LembrarComoAbreTela()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(8);
+            iniciar.Play();
+        }
     }
 
     void Update () {

@@ -42,7 +42,6 @@ public class ControleJogo : MonoBehaviour
     public List<Animator> musicos = new List<Animator>();
     public List<Animator> instrumentoVisual = new List<Animator>();
     public List<AudioMixerGroup> mixerGroup = new List<AudioMixerGroup>();
-
     [Header("Animação de feedback maozinha")]
     public List<Animator> animMao = new List<Animator>();
 
@@ -50,12 +49,14 @@ public class ControleJogo : MonoBehaviour
     AudioSource somPrincipal;
     public AudioClip iniciarAudio, somCortina;
     public List<ListaParticulas> part = new List<ListaParticulas>();
+    public List<AudioClip> sonsTutorial = new List<AudioClip>();
+    bool[] somTuto = new bool[4];
     float tempoDecorrido;
 
     [Header("Config Final")]
     public AudioClip aplausos, uivos;
     public Animator cortinas;
-
+    public GameObject pointsHolder;
     void Start()
     {
         somPrincipal = GetComponent<AudioSource>();
@@ -86,6 +87,8 @@ public class ControleJogo : MonoBehaviour
         {
         }
         textoPont.text = pontuacao.ToString();
+
+        CountMusicTime();
 
     }
 
@@ -154,6 +157,12 @@ public class ControleJogo : MonoBehaviour
         FinalizarJogo(true);
     }
 
+    IEnumerator TempoCarregarCena()
+    {
+        yield return new WaitForSeconds(10);
+        SceneManager.LoadScene(0);
+    }
+
     IEnumerator FeedbackTempoMusica()
     {
         yield return new WaitForSeconds(tempoTotalJogo/2);
@@ -175,6 +184,13 @@ public class ControleJogo : MonoBehaviour
         tirarTutorial = true;
         yield return new WaitForSeconds(230);
         tempoEntreInt = 4;
+    }
+
+    IEnumerator TutorialMovimentos(int qualProb)
+    {
+        yield return new WaitForSeconds(2.5f);
+        somPrincipal.clip = sonsTutorial[qualProb];
+        somPrincipal.Play();
     }
 
     private int GerarNumRandom()
@@ -211,7 +227,8 @@ public class ControleJogo : MonoBehaviour
         MutarTodosInstrumentos();
         StopCoroutine(rotinaPontuacao);
         StopCoroutine(rotinaDesafino);
-        AudioSource.PlayClipAtPoint((ganhou ? aplausos : uivos), Camera.main.transform.position);
+        StartCoroutine(TempoCarregarCena());
+        AudioSource.PlayClipAtPoint((ganhou ? aplausos : uivos), Camera.main.transform.position);  
     }
 
     private void ProblemasInstrumentos(int qualInst, int qualPro, bool gerarPro)
@@ -231,7 +248,7 @@ public class ControleJogo : MonoBehaviour
                 break;
         }
 
-       instDesafinado[qualInst] = gerarPro;
+        instDesafinado[qualInst] = gerarPro;
 
         if (gerarPro)
         {
@@ -239,10 +256,14 @@ public class ControleJogo : MonoBehaviour
             somPrincipal.Play();
         }
 
-        
+
         GerenciarMaoFeedback(qualInst, qualPro, gerarPro);
         LigarParticulaAdequada(qualInst, qualPro, gerarPro);
         EfeitosProblemas(qualInst, qualPro, gerarPro);
+        if (gerarPro && !somTuto[qualPro]) {
+            StartCoroutine(TutorialMovimentos(qualPro));
+            somTuto[qualPro] = true;
+        }
     }
     
     private void GerenciarMaoFeedback(int qualInst, int qualPro, bool gerarPro)
@@ -387,7 +408,7 @@ public class ControleJogo : MonoBehaviour
         var aux = tempoDecorrido / tempoTotalJogo;
         timeMusicBar.fillAmount = aux;
 
-        if(aux < almostOver)
+        if(aux > almostOver)
         {
             m_MyColor = Color.red;
             timeMusicBar.color = m_MyColor;
