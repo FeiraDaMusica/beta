@@ -40,6 +40,7 @@ public class ControleJogo : MonoBehaviour
     [Header("Config inicial")]
     AudioSource somPrincipal;
     public AudioClip iniciarAudio;
+    public List<ListaParticulas> part = new List<ListaParticulas>();
 
     void Start()
     {
@@ -153,7 +154,8 @@ public class ControleJogo : MonoBehaviour
             somPrincipal.Play();
         }
 
-            EfeitosProblemas(qualInst, qualPro, gerarPro);
+        LigarParticulaAdequada(qualInst, qualPro, gerarPro);
+        EfeitosProblemas(qualInst, qualPro, gerarPro);
     }
     
     private void EfeitosProblemas(int qualInst, int qualPro, bool gerarPro)
@@ -165,12 +167,12 @@ public class ControleJogo : MonoBehaviour
                 instrumentoVisual[qualInst].SetTrigger((gerarPro ? "parou" : "normal"));
                 break;
             case (1):
-                instrumentosAudio[qualInst].volume = (gerarPro ? 0.1f : 0.25f);
+                instrumentosAudio[qualInst].volume = (gerarPro ? 1f : 0.25f);
                 musicos[qualInst].SetTrigger((gerarPro ? "ruim" : "normal"));
                 instrumentoVisual[qualInst].SetTrigger((gerarPro ? "ruim" : "normal"));
                 break;
             case (2):
-                instrumentosAudio[qualInst].volume = (gerarPro ? 0.75f : 0.25f); 
+                instrumentosAudio[qualInst].volume = (gerarPro ? 0.1f : 0.25f); 
                 musicos[qualInst].SetTrigger((gerarPro ? "ruim" : "normal"));
                 instrumentoVisual[qualInst].SetTrigger((gerarPro ? "ruim" : "normal"));
                 break;
@@ -273,12 +275,50 @@ public class ControleJogo : MonoBehaviour
         }
     }
 
+    [Header("Time Lapse")]
+    // public Text timerText;
+    public AudioSource timeMusic;
+    private float secondsCount;
+    public float almostOver = 0.98f;
+    public Image timeMusicBar;
+    private Color m_MyColor;
+
+    public void CountMusicTime()
+    {
+        var aux = ( (secondsCount - timeMusic.time)/ secondsCount);
+        timeMusicBar.fillAmount = aux;
+
+        if(aux < almostOver)
+        {
+            m_MyColor = Color.red;
+            timeMusicBar.color = m_MyColor;
+        }
+
+        Debug.Log(aux);
+    }
+
     #endregion
 
     #region Visuais
     public void AtualizacaoVida()
     {
         vidaHud.fillAmount = vida / vidaMaxima;
+    }
+
+    private void LigarParticulaAdequada(int qualInst, int qualPro, bool ativar)
+    {
+        if (ativar)
+        {
+            GameObject temp = part[qualInst].particulas[qualPro];
+            temp.SetActive(ativar);
+            temp.transform.position = musicos[qualInst].gameObject.transform.position + new Vector3(0,0.25f ,0);
+        }
+        else
+            foreach (GameObject go in part[qualInst].particulas)
+            {
+                if (go.activeSelf)
+                    go.SetActive(false);
+            }
     }
 
     #endregion
@@ -304,4 +344,9 @@ public class ControleJogo : MonoBehaviour
 public class ListasMaestro
 {
     public List<AudioClip> comentarioInstrumento = new List<AudioClip>();
+}
+
+[Serializable]
+public class ListaParticulas {
+    public List<GameObject> particulas = new List<GameObject>();
 }
